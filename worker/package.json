@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "tsx server.ts",
     "dev:cf": "wrangler dev",
     "deploy:cf": "wrangler deploy",
     "db:init": "mkdir -p data && sqlite3 ./data/activation.db < schema.sql",
@@ -18,13 +18,13 @@
     "@hono/node-server": "^1.8.0",
     "better-sqlite3": "^11.0.0",
     "ioredis": "^5.3.0",
-    "dotenv": "^16.4.0"
+    "dotenv": "^16.4.0",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240512.0",
     "@types/better-sqlite3": "^7.6.8",
     "@types/node": "^20.11.0",
-    "tsx": "^4.7.0",
     "typescript": "^5.4.0",
     "wrangler": "^3.57.0"
   }
