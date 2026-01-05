@@ -5,6 +5,9 @@ RUN apk add --no-cache python3 make g++ sqlite
 
 WORKDIR /app
 
+# 配置 npm 镜像源加速
+RUN npm config set registry https://registry.npmmirror.com
+
 # 复制依赖文件
 COPY package*.json ./
 RUN npm ci
