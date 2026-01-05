@@ -1,0 +1,11 @@
+{
+  "build": {
+    "command": "npm run build",
+    "output": "dist"
+  },
+  "deploy": {
+    "production": {
+      "environment": "production"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+name = "activation-code-api"
+main = "src/index.ts"
+compatibility_date = "2024-05-01"
+
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"
+database_name = "activation-code-db"
+database_id = "4dccf951-3e1b-4857-8b92-1924a01cca6d"
+
+# KV 命名空间绑定 (用于 nonce 防重放)
+[[kv_namespaces]]
+binding = "NONCE_KV"
+id = "f88cba63d6704a419cf59bab1260b6a6"  # 部署时替换为实际 ID
+
+# 环境变量
+[vars]
+JWT_SECRET = "your-jwt-secret-change-in-production"
+CORS_ORIGIN = "*"
