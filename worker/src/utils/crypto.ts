@@ -1,8 +1,7 @@
-// Node.js crypto polyfill
+// Node.js crypto
 import { webcrypto } from 'node:crypto';
-if (typeof globalThis.crypto === 'undefined') {
-  (globalThis as any).crypto = webcrypto;
-}
+
+const crypto = webcrypto as unknown as Crypto;
 
 // 生成 UUID
 export function generateUUID(): string {
