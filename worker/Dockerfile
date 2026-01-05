@@ -15,6 +15,9 @@ COPY . .
 # 构建 TypeScript
 RUN npm run build
 
+# 只保留生产依赖
+RUN rm -rf node_modules && npm ci --omit=dev
+
 # 生产环境镜像
 FROM node:20-alpine
 
@@ -23,11 +26,10 @@ RUN apk add --no-cache sqlite
 
 WORKDIR /app
 
-# 复制依赖和构建产物
-COPY package*.json ./
-RUN npm ci --only=production
-
+# 从 builder 复制已编译的 node_modules 和构建产物
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
 COPY schema.sql ./
 
 # 创建数据目录
