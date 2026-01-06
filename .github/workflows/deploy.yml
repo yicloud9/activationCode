@@ -39,7 +39,8 @@ jobs:
           script: |
             git config --global --add safe.directory /opt/activationCode
             cd /opt/activationCode
-            sudo git pull origin main
+            sudo git fetch origin main
+            sudo git reset --hard origin/main
             cd frontend && sudo npm install && sudo npm run build
             echo "Frontend deploy completed!"
 
@@ -58,6 +59,7 @@ jobs:
           script: |
             git config --global --add safe.directory /opt/activationCode
             cd /opt/activationCode
-            sudo git pull origin main
+            sudo git fetch origin main
+            sudo git reset --hard origin/main
             sudo docker compose up -d --build backend
             echo "Backend deploy completed!"
