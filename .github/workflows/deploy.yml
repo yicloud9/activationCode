@@ -37,7 +37,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd /opt/activation-code
+            cd /opt/activationCode
             git pull origin main
             cd frontend && npm install && npm run build
             echo "Frontend deploy completed!"
@@ -55,7 +55,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd /opt/activation-code
+            cd /opt/activationCode
             git pull origin main
             docker compose up -d --build backend
             echo "Backend deploy completed!"
