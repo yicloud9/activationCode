@@ -10,6 +10,7 @@ sdk/
 .env
 .env.local
 .env.*.local
+.env.development
 
 # 日志文件
 *.log
