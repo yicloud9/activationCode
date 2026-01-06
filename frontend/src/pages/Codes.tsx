@@ -17,6 +17,41 @@ const statusLabels: Record<string, string> = {
   revoked: '已作废',
 };
 
+// 时间单位转换为小时
+const durationUnits = {
+  year: { label: '年', hours: 8760 },   // 365 * 24
+  month: { label: '月', hours: 720 },   // 30 * 24
+  day: { label: '日', hours: 24 },
+};
+
+// 将小时换算成友好的年月日显示
+function formatDurationHours(hours: number): string {
+  if (hours >= 8760 && hours % 8760 === 0) {
+    return `${hours / 8760} 年`;
+  }
+  if (hours >= 720 && hours % 720 === 0) {
+    return `${hours / 720} 月`;
+  }
+  if (hours >= 24 && hours % 24 === 0) {
+    return `${hours / 24} 日`;
+  }
+  // 混合显示
+  const years = Math.floor(hours / 8760);
+  const remainingAfterYears = hours % 8760;
+  const months = Math.floor(remainingAfterYears / 720);
+  const remainingAfterMonths = remainingAfterYears % 720;
+  const days = Math.floor(remainingAfterMonths / 24);
+  const remainingHours = remainingAfterMonths % 24;
+
+  const parts = [];
+  if (years > 0) parts.push(`${years}年`);
+  if (months > 0) parts.push(`${months}月`);
+  if (days > 0) parts.push(`${days}日`);
+  if (remainingHours > 0) parts.push(`${remainingHours}小时`);
+
+  return parts.length > 0 ? parts.join('') : '0小时';
+}
+
 export default function Codes() {
   const [data, setData] = useState<PaginatedData<ActivationCode> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -178,6 +213,9 @@ export default function Codes() {
                   创建时间
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  备注
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
@@ -185,13 +223,13 @@ export default function Codes() {
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                     加载中...
                   </td>
                 </tr>
               ) : data?.list.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                     暂无数据
                   </td>
                 </tr>
@@ -213,7 +251,7 @@ export default function Codes() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {code.duration_hours} 小时
+                      {formatDurationHours(code.duration_hours)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {code.expired_at ? dayjs(code.expired_at).format('YYYY-MM-DD HH:mm') : '-'}
@@ -223,6 +261,9 @@ export default function Codes() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {dayjs(code.created_at).format('YYYY-MM-DD HH:mm')}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={code.remark || ''}>
+                      {code.remark || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                       {code.status !== 'revoked' && code.status !== 'expired' && (
@@ -291,7 +332,8 @@ function CreateCodeModal({ onClose, onSuccess }: { onClose: () => void; onSucces
   const [form, setForm] = useState({
     app_name: '',
     user_name: '',
-    duration_hours: 24,
+    duration_value: 1,
+    duration_unit: 'year' as keyof typeof durationUnits,
     remark: '',
   });
   const [loading, setLoading] = useState(false);
@@ -308,8 +350,16 @@ function CreateCodeModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     setLoading(true);
     setError('');
 
+    // 将年/月/日换算成小时
+    const duration_hours = form.duration_value * durationUnits[form.duration_unit].hours;
+
     try {
-      const response = await codesApi.create(form);
+      const response = await codesApi.create({
+        app_name: form.app_name,
+        user_name: form.user_name,
+        duration_hours,
+        remark: form.remark,
+      });
       if (response.data.success) {
         setResult(response.data.data);
       } else {
@@ -387,15 +437,26 @@ function CreateCodeModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                有效时长（小时） <span className="text-red-500">*</span>
+                有效时长 <span className="text-red-500">*</span>
               </label>
-              <input
-                type="number"
-                min="1"
-                value={form.duration_hours}
-                onChange={(e) => setForm({ ...form, duration_hours: parseInt(e.target.value) || 1 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={form.duration_value}
+                  onChange={(e) => setForm({ ...form, duration_value: parseInt(e.target.value) || 1 })}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+                <select
+                  value={form.duration_unit}
+                  onChange={(e) => setForm({ ...form, duration_unit: e.target.value as keyof typeof durationUnits })}
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="year">年</option>
+                  <option value="month">月</option>
+                  <option value="day">日</option>
+                </select>
+              </div>
             </div>
 
             <div>
