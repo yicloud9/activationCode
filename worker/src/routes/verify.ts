@@ -7,10 +7,10 @@ const verify = new Hono<{ Bindings: Env }>();
 // 验证激活码
 verify.post('/verify', async (c) => {
   try {
-    const { code, app_name, timestamp, nonce, signature, api_key } = await c.req.json();
+    const { code, app_name, user_name, timestamp, nonce, signature, api_key } = await c.req.json();
 
     // 参数验证
-    if (!code || !app_name || !timestamp || !nonce || !signature || !api_key) {
+    if (!code || !app_name || !user_name || !timestamp || !nonce || !signature || !api_key) {
       return c.json({ success: false, error: '缺少必要参数' }, 400);
     }
 
@@ -32,7 +32,7 @@ verify.post('/verify', async (c) => {
     }
 
     // 验证签名
-    const signatureInput = `${code}${app_name}${timestamp}${nonce}${admin.api_secret}`;
+    const signatureInput = `${code}${app_name}${user_name}${timestamp}${nonce}${admin.api_secret}`;
     const expectedSignature = await hmacSha256(signatureInput, admin.api_secret);
 
     if (signature.toLowerCase() !== expectedSignature.toLowerCase()) {
@@ -61,6 +61,11 @@ verify.post('/verify', async (c) => {
     // 验证 APP 名称是否匹配
     if (activationCode.app_name !== app_name) {
       return c.json({ success: true, valid: false, message: '激活码与 APP 不匹配' });
+    }
+
+    // 验证用户名称是否匹配
+    if (activationCode.user_name !== user_name) {
+      return c.json({ success: true, valid: false, message: '激活码与用户不匹配' });
     }
 
     // 检查状态
